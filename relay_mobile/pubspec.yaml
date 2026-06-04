@@ -1,0 +1,38 @@
+name: relay_mobile
+description: Gearbox Relay mobile client — Flutter + Rust bridge
+publish_to: 'none'
+version: 0.1.0+1
+
+environment:
+  sdk: '>=3.10.0 <4.0.0'
+  flutter: '>=3.38.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_rust_bridge: 2.12.0
+  path_provider: ^2.1.0
+  http: ^1.2.0
+  share_plus: ^10.0.0
+  sentry_flutter: ^8.14.0
+  shared_preferences: ^2.5.0
+  firebase_core: ^4.9.0
+  go_router: ^17.2.0
+  flutter_background_service: ^5.1.0
+  firebase_messaging: ^16.2.2
+  flutter_local_notifications: ^19.0.0
+  app_links: ^6.0.0
+  crypto: ^3.0.0
+  convert: ^3.1.0
+  rust_lib_relay_mobile:
+    path: rust_builder
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+  integration_test:
+    sdk: flutter
+
+flutter:
+  uses-material-design: true

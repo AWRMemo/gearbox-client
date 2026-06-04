@@ -1,0 +1,116 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version_tag:
+        description: 'Version tag (e.g., v0.1.0)'
+        required: true
+  push:
+    tags:
+      - 'v*'
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build-desktop:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: windows-latest
+            args: ""
+          - platform: macos-latest
+            args: "--target aarch64-apple-darwin"
+          - platform: ubuntu-latest
+            args: ""
+
+    runs-on: ${{ matrix.platform }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin' || '' }}
+
+      - name: Rust Cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: workspace
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 9
+
+      - name: Cache model assets
+        uses: actions/cache@v4
+        with:
+          path: ~/.local/share/relay/models
+          key: relay-models-${{ runner.os }}-${{ hashFiles('scripts/download-qwen-gguf.sh') }}
+          restore-keys: relay-models-${{ runner.os }}-
+
+      - name: Download Qwen model (if cache miss)
+        shell: bash
+        run: |
+          if [ ! -f ~/.local/share/relay/models/qwen3.5-0.8b-q4_k_m.gguf ]; then
+            bash scripts/download-qwen-gguf.sh
+          fi
+
+      - name: Install frontend deps
+        run: pnpm install
+
+      - name: Install Tauri CLI
+        run: cargo install tauri-cli --version "^2.0"
+
+      - name: Build (Linux)
+        if: matrix.platform == 'ubuntu-latest'
+        run: cargo tauri build ${{ matrix.args }}
+        env:
+          CI: "true"
+
+      - name: Build (macOS)
+        if: matrix.platform == 'macos-latest'
+        run: cargo tauri build ${{ matrix.args }}
+        env:
+          CI: "true"
+          # Codesign placeholder — uncomment when signing cert is available
+          # MACOS_CERTIFICATE: ${{ secrets.MACOS_CERTIFICATE }}
+          # MACOS_CERTIFICATE_PASSWORD: ${{ secrets.MACOS_CERTIFICATE_PASSWORD }}
+          # APPLE_ID: ${{ secrets.APPLE_ID }}
+          # APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+          # APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+
+      - name: Build (Windows)
+        if: matrix.platform == 'windows-latest'
+        run: cargo tauri build ${{ matrix.args }}
+        env:
+          CI: "true"
+          # Windows code signing via signtool — uncomment when cert is available
+          # WINDOWS_CERTIFICATE: ${{ secrets.WINDOWS_CERTIFICATE }}
+          # WINDOWS_CERTIFICATE_PASSWORD: ${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: relay-desktop-${{ matrix.platform }}
+          path: |
+            src-tauri/target/release/bundle/
+
+      - name: Upload release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: src-tauri/target/release/bundle/*
+          draft: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

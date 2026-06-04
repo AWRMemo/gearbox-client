@@ -1,0 +1,56 @@
+name: Verify Public Repo Clean
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check for agent tooling files
+        run: |
+          FAILED=0
+          BLOCKED_FILES=(
+            "CLAUDE.md" ".clinerules" ".cursorrules"
+            "kilo.json" "gateway.config.json" "gateway.env"
+            "Logo-Brainstorm.md" "devlog.md"
+            "docs/sprint-17-plan.md" "docs/sprint-18-plan.md" "docs/sprint-19-plan.md"
+            "docs/adr/adr-009-agent-tool-ban.md" "docs/adr/adr-010-sprint-18-recovery.md"
+            "docs/architecture-decisions/adr-009-sprint-18-recovery.md"
+            "docs/architecture-decisions/adr-010-agent-tool-ban.md"
+            "relay-sync-server/" ".kilo/" ".kilocode/"
+            "canned_test_output.txt" "quality_bench_output.txt" "fix_parser.py"
+            "fly.toml"
+          )
+          for file in "${BLOCKED_FILES[@]}"; do
+            if [ -e "$file" ]; then
+              echo "BLOCKED: $file present in repo"
+              FAILED=1
+            fi
+          done
+
+          # Content check: no agent terminology in AGENTS.md
+          AGENT_COUNT=$(grep -ci '\bagent\b' AGENTS.md 2>/dev/null || echo "0")
+          if [ "$AGENT_COUNT" -gt 5 ]; then
+            echo "BLOCKED: AGENTS.md contains $AGENT_COUNT mentions of 'agent' (>5 threshold)"
+            FAILED=1
+          fi
+
+          if [ "$FAILED" -eq 1 ]; then
+            echo ""
+            echo "Verification failed. The public repo must not contain:"
+            echo "  - AI agent configuration files"
+            echo "  - Agent sprint planning documents"
+            echo "  - Proprietary server code"
+            echo "  - Build artifacts"
+            echo "  - Deployment configs"
+            exit 1
+          fi
+
+          echo "Public repo is clean."

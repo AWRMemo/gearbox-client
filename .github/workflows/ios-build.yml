@@ -1,0 +1,82 @@
+name: iOS Build
+
+on:
+  push:
+    branches: [main, feat/sprint-21-monetization-launch]
+    paths-ignore:
+      - 'relay-sync-server/**'
+      - 'docs/**'
+      - '*.md'
+  workflow_dispatch:
+
+concurrency:
+  group: ios-build-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  build-ios:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Rust Cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: mobile
+          workspaces: relay_mobile/rust
+          cache-targets: true
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.48.0'
+          channel: stable
+
+      - name: Enable Swift Package Manager
+        run: flutter config --enable-swift-package-manager
+
+      - name: Cache Flutter
+        uses: actions/cache@v4
+        env:
+          PUB_CACHE: ${{ github.workspace }}/.pub-cache
+        with:
+          path: |
+            ${{ env.PUB_CACHE }}
+          key: ${{ runner.os }}-flutter-${{ hashFiles('relay_mobile/pubspec.lock') }}
+          restore-keys: ${{ runner.os }}-flutter-
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-apple-ios,x86_64-apple-ios
+
+      - name: Install flutter_rust_bridge_codegen
+        run: cargo install flutter_rust_bridge_codegen
+
+      - name: Install Flutter dependencies
+        working-directory: relay_mobile
+        run: flutter pub get
+
+      - name: Generate FRB bindings
+        working-directory: relay_mobile
+        run: flutter_rust_bridge_codegen generate
+
+      - name: Build iOS
+        working-directory: relay_mobile
+        run: flutter build ios --release --no-codesign
+
+      - name: Package IPA
+        working-directory: relay_mobile
+        run: |
+          mkdir -p Payload
+          cp -r build/ios/Release-iphoneos/Runner.app Payload/
+          zip -r relay.ipa Payload/
+
+      - name: Upload IPA artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: relay-ios
+          path: relay_mobile/relay.ipa

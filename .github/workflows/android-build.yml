@@ -1,0 +1,98 @@
+name: Android Build
+
+on:
+  push:
+    branches: [main, feat/android-ci]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: android-build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.48.0'
+          channel: 'stable'
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-linux-android,armv7-linux-androideabi,x86_64-linux-android
+
+      - name: Cache FRB codegen + cargo-ndk
+        id: cache-frb
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/bin/flutter_rust_bridge_codegen
+            ~/.cargo/bin/cargo-ndk
+          key: ${{ runner.os }}-frb-2.12.0-ndk
+
+      - name: Install FRB codegen
+        run: cargo install flutter_rust_bridge_codegen --version 2.12.0 --locked
+        if: steps.cache-frb.outputs.cache-hit != 'true'
+
+      - name: Install cargo-ndk
+        run: cargo install cargo-ndk --version 3.5.0 --locked
+        if: steps.cache-frb.outputs.cache-hit != 'true'
+
+      - name: Setup Android NDK
+        uses: nttld/setup-ndk@v1
+        with:
+          ndk-version: r25c
+          link-to-python: true
+
+      - name: Cache Flutter
+        uses: actions/cache@v4
+        env:
+          PUB_CACHE: ${{ github.workspace }}/.pub-cache
+        with:
+          path: |
+            ${{ env.PUB_CACHE }}
+            relay_mobile/.dart_tool
+          key: ${{ runner.os }}-flutter-${{ hashFiles('relay_mobile/pubspec.lock') }}
+          restore-keys: ${{ runner.os }}-flutter-
+
+      - name: Get dependencies
+        run: flutter pub get
+        working-directory: relay_mobile
+
+      - name: Cache Rust build
+        uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: mobile
+          workspaces: relay_mobile/rust
+          cache-targets: true
+
+      - name: Build NDK
+        run: cargo ndk -t armeabi-v7a -t arm64-v8a -t x86_64 -o android/app/src/main/jniLibs build --release
+        working-directory: relay_mobile/rust
+        env:
+          ANDROID_NDK_HOME: ${{ env.ANDROID_NDK_HOME }}
+          ANDROID_NDK_ROOT: ${{ env.ANDROID_NDK_HOME }}
+
+      - name: Build APK
+        run: flutter build apk --release
+        working-directory: relay_mobile
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: relay-android
+          path: relay_mobile/build/app/outputs/flutter-apk/app-release.apk

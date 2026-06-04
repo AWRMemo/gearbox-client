@@ -1,0 +1,21 @@
+[package]
+name = "relay-bench"
+version = "0.1.0"
+edition = "2021"
+license = "Apache-2.0"
+
+[[bin]]
+name = "relay-bench"
+path = "src/main.rs"
+
+[[bin]]
+name = "quality-bench"
+path = "src/quality_bench.rs"
+
+[dependencies]
+relay-core = { path = "../relay-core" }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+serde_yaml = "0.9"
+chrono = "0.4"
+pollster = "0.4"

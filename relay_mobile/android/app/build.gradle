@@ -1,0 +1,40 @@
+plugins {
+    id "com.android.application"
+    id "dev.flutter.flutter-gradle-plugin"
+}
+
+android {
+    namespace "com.gearbox.relay"
+    compileSdk = flutter.compileSdkVersion
+    ndkVersion = flutter.ndkVersion
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_21
+        targetCompatibility = JavaVersion.VERSION_21
+        coreLibraryDesugaringEnabled = true
+    }
+
+    defaultConfig {
+        applicationId = "com.gearbox.relay"
+        minSdk = 24
+        targetSdk = flutter.targetSdkVersion
+        versionCode = flutter.versionCode
+        versionName = flutter.versionName
+    }
+
+    buildTypes {
+        release {
+            signingConfig = signingConfigs.debug
+        }
+    }
+}
+
+dependencies {
+    coreLibraryDesugaring "com.android.tools:desugar_jdk_libs:2.1.4"
+    // MediaPipe LLM Inference — Sprint 12 AI spike (Qwen-3.5-0.8B)
+    implementation "com.google.mediapipe:tasks-genai:0.10.22"
+}
+
+flutter {
+    source = "../.."
+}

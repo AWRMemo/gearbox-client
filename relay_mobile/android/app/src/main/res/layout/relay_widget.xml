@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:gravity="center"
+    android:padding="12dp"
+    android:background="#1a1a2e">
+
+    <TextView
+        android:id="@+id/widget_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="#a0d8ef"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:text="Relay" />
+
+    <TextView
+        android:id="@+id/widget_capture_count"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="#e0e0e0"
+        android:textSize="13sp"
+        android:layout_marginTop="6dp"
+        android:text="0 captures" />
+
+    <TextView
+        android:id="@+id/widget_last_summary"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="#888888"
+        android:textSize="11sp"
+        android:layout_marginTop="4dp"
+        android:maxLines="2"
+        android:text="No captures yet" />
+
+</LinearLayout>

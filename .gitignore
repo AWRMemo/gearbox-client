@@ -1,0 +1,59 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Rust / Tauri build artifacts
+/target/
+src-tauri/target/
+relay-core/target/
+relay-sync-server/target/
+relay_mobile/rust/target/
+
+# AI models (downloaded at runtime; never commit)
+*.gguf
+*.downloading
+models/
+
+# AI tooling configs — NEVER commit
+.kilo/
+.kilocode/
+kilo.json
+CLAUDE.md
+.clinerules
+.cursorrules
+gateway.config.json
+gateway.env
+devlog.md
+fly.toml
+
+# Secrets — NEVER commit
+*.env
+.env
+*/google-services.json
+*/service-account.json
+PRIVATE_KEY
+API_KEY
+TOKEN
+GITHUB_TOKEN
+CACTUS_API_KEY

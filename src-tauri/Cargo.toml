@@ -1,0 +1,56 @@
+[package]
+name = "relay"
+version = "0.1.0"
+edition = "2021"
+license = "Apache-2.0"
+description = "Gearbox Relay — local-first AI-native knowledge pipeline"
+
+[dependencies]
+base64 = "0.22"
+chrono = { version = "0.4", features = ["serde"] }
+encoding_rs = "0.8.35"
+llama-cpp-2 = "0.1.146"
+ndarray = "0.17"
+native-dialog = "0.7"
+once_cell = "1"
+ort = "2.0.0-rc.12"
+relay-core = { path = "../relay-core", features = ["sentry-integration"] }
+reqwest = { version = "0.12", features = ["blocking", "json", "stream"] }
+ring = "0.17"
+rusqlite = { version = "0.31", features = ["bundled"] }
+sentry = "0.36"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tauri = { version = "2", features = ["tray-icon"] }
+tauri-plugin-clipboard-manager = "2"
+tauri-plugin-deep-link = "2"
+tauri-plugin-global-shortcut = "2"
+tiny_http = "0.12"
+tokenizers = "0.23"
+tokio = { version = "1", features = ["rt", "macros", "time"] }
+tokio-util = "0.7"
+uuid = { version = "1", features = ["v4"] }
+lancedb = "0.29"
+arrow = "58"
+arrow-array = "58"
+arrow-schema = "58"
+futures = "0.3"
+zip = "2"
+argon2 = "0.5"
+aes-gcm = "0.10"
+jsonwebtoken = "9"
+notify-rust = "4"
+arboard = "3"
+open = "5.3.5"
+tracing = "0.1.44"
+tracing-subscriber = { version = "0.3.23", features = ["env-filter"] }
+
+[target.'cfg(windows)'.dependencies]
+winapi = { version = "0.3", features = ["winbase"] }
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dev-dependencies]
+tokio = { version = "1", features = ["rt", "macros", "time"] }
+relay-core = { path = "../relay-core", features = ["test-utils"] }

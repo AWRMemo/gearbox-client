@@ -1,0 +1,3 @@
+[workspace]
+members = ["relay-core", "src-tauri", "relay-bench", "relay_mobile/rust"]
+resolver = "2"
